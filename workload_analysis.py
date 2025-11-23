@@ -35,11 +35,11 @@ class FSRS6_Standalone:
         #     0.0658,  # 19
         #     0.1542  # 20
         # ], dtype=torch.float32)
-        # SoundJona
+        # S.
         self.w = torch.tensor([0.2349, 0.9428, 3.9614, 15.1168, 6.4464, 0.6630, 3.0691, 0.0129, 1.6820, 0.3375, 0.6230, 1.6110, 0.0110, 0.4084, 1.7567, 0.4727, 2.0014, 0.7389, 0.2581, 0.1250, 0.1000], dtype=torch.float32)
-        # Me
+        # E.
         # self.w = torch.tensor([1.1181, 1.1181, 14.9561, 100.0000, 6.1425, 0.8527, 3.2886, 0.0096, 2.5799, 0.0000, 1.3824, 1.5719, 0.0455, 0.3267, 1.7273, 0.0493, 2.7913, 0.6267, 0.3912, 0.0451, 0.1000], dtype=torch.float32)
-        # Dyzur
+        # D.
         # self.w = torch.tensor([0.4045, 3.3476, 3.3476, 3.3476, 6.3651, 0.5392, 3.1642, 0.0341, 1.7171, 0.1858, 0.6978, 1.5303, 0.0393, 0.3250, 1.7042, 0.2680, 1.8729, 0.6017, 0.1061, 0.1269, 0.1001], dtype=torch.float32)
 
     def calculate_success_stability(self, s: torch.Tensor, d: float, r: torch.Tensor) -> torch.Tensor:
@@ -113,13 +113,14 @@ def calculate_workload_reduction(R: torch.Tensor, S: float, D: float, fsrs: FSRS
     return workload_reduction
 
 
-def analyze_by_difficulty(S: float, fsrs: FSRS6_Standalone):
+def analyze_by_difficulty(S: float, fsrs: FSRS6_Standalone, save_path: str = None):
     """
     Create 3D surface plot varying Difficulty (D) and Retention (R) for fixed Stability (S).
 
     Args:
         S: Fixed Stability value (days)
         fsrs: FSRS6_Standalone instance
+        save_path: Optional path to save the figure
     """
     # Create ranges for D and R
     D_values = torch.linspace(1, 10, steps=50)  # Difficulty from 1 to 10
@@ -143,7 +144,7 @@ def analyze_by_difficulty(S: float, fsrs: FSRS6_Standalone):
     # ==========================================
     # CREATE 3D SURFACE PLOT
     # ==========================================
-    fig = plt.figure(figsize=(14, 10))
+    fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
 
     # Set color limits symmetric around zero for diverging colormap
@@ -155,28 +156,37 @@ def analyze_by_difficulty(S: float, fsrs: FSRS6_Standalone):
                           cmap='RdYlGn', alpha=0.8, edgecolor='none',
                           vmin=vmin, vmax=vmax)
 
-    ax.set_xlabel('R (Retention at review)', fontsize=12)
-    ax.set_ylabel('D (Difficulty)', fontsize=12)
-    ax.set_zlabel('Workload Reduction (workload_init - workload_after)', fontsize=12)
-    ax.set_title(f'Workload Reduction After Review\n(FSRS-6, S={S} days)', fontsize=14)
+    ax.set_xlabel('R (Retention)', fontsize=9)
+    ax.set_ylabel('D (Difficulty)', fontsize=9)
+    ax.set_zlabel('Workload Reduction', fontsize=9)
+    ax.set_title(f'S={S} days', fontsize=11)
 
     # Add colorbar
-    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5, label='Red=Increase, Green=Decrease')
+    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
 
     plt.tight_layout()
-    plt.show()
+
+    if save_path:
+        plt.savefig(save_path, dpi=100, bbox_inches='tight')
+        print(f"Saved to {save_path}")
+        plt.close()
+    else:
+        plt.show()
 
 
-def analyze_by_stability(D: float, fsrs: FSRS6_Standalone):
+def analyze_by_stability(D: float, fsrs: FSRS6_Standalone, save_path: str = None, S_min: float = 1, S_max: float = 50):
     """
     Create 3D surface plot varying Stability (S) and Retention (R) for fixed Difficulty (D).
 
     Args:
         D: Fixed Difficulty value (1-10)
         fsrs: FSRS6_Standalone instance
+        save_path: Optional path to save the figure
+        S_min: Minimum stability value (days)
+        S_max: Maximum stability value (days)
     """
     # Create ranges for S and R
-    S_values = torch.linspace(1, 50, steps=50)  # Stability from 1 to 50 days
+    S_values = torch.linspace(S_min, S_max, steps=50)  # Stability range
     R_values = torch.linspace(0.01, 0.99, steps=50)  # Retention from 0.01 to 0.99
 
     print(f"Calculating 3D surface for D={D}")
@@ -197,7 +207,7 @@ def analyze_by_stability(D: float, fsrs: FSRS6_Standalone):
     # ==========================================
     # CREATE 3D SURFACE PLOT
     # ==========================================
-    fig = plt.figure(figsize=(14, 10))
+    fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
 
     # Set color limits symmetric around zero for diverging colormap
@@ -209,16 +219,42 @@ def analyze_by_stability(D: float, fsrs: FSRS6_Standalone):
                           cmap='RdYlGn', alpha=0.8, edgecolor='none',
                           vmin=vmin, vmax=vmax)
 
-    ax.set_xlabel('R (Retention at review)', fontsize=12)
-    ax.set_ylabel('S (Stability in days)', fontsize=12)
-    ax.set_zlabel('Workload Reduction (workload_init - workload_after)', fontsize=12)
-    ax.set_title(f'Workload Reduction After Review\n(FSRS-6, D={D})', fontsize=14)
+    ax.set_xlabel('R (Retention)', fontsize=9)
+    ax.set_ylabel('S (Stability, days)', fontsize=9)
+    ax.set_zlabel('Workload Reduction', fontsize=9)
+    ax.set_title(f'D={D}, S={S_min:.0f}-{S_max:.0f}', fontsize=11)
 
     # Add colorbar
-    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5, label='Red=Increase, Green=Decrease')
+    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
 
     plt.tight_layout()
-    plt.show()
+
+    if save_path:
+        plt.savefig(save_path, dpi=100, bbox_inches='tight')
+        print(f"Saved to {save_path}")
+        plt.close()
+    else:
+        plt.show()
+
+
+def generate_sample_images():
+    """Generate sample images for README"""
+    import os
+    os.makedirs('images', exist_ok=True)
+
+    fsrs = FSRS6_Standalone()
+
+    # Generate images varying difficulty at different stability values
+    for s in [25, 100, 500]:
+        analyze_by_difficulty(S=s, fsrs=fsrs, save_path=f'images/difficulty_S{s}.png')
+
+    # Generate images varying stability at different difficulty values (1-50 days)
+    for d in [3, 7, 10]:
+        analyze_by_stability(D=d, fsrs=fsrs, save_path=f'images/stability_D{d}_1-50.png', S_min=1, S_max=50)
+
+    # Generate images varying stability at different difficulty values (50-100 days)
+    for d in [3, 7, 10]:
+        analyze_by_stability(D=d, fsrs=fsrs, save_path=f'images/stability_D{d}_50-100.png', S_min=50, S_max=100)
 
 
 def main():
