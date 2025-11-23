@@ -64,21 +64,37 @@ class FSRS6_Standalone:
 
         return torch.minimum(new_s_calc, new_minimum_s)
 
+    def forgetting_curve(self, t, s, decay=None):
+        """Calculate retention R(t) at time t for given stability s"""
+        if not decay:
+            decay = self.w[20]
+        factor = 0.9 ** (1 / decay) - 1
+        return (1 + factor * t / s) ** decay
+
+    def interval_from_retention(self, r, s, decay=None):
+        """Calculate time t when retention drops to r for given stability s"""
+        if not decay:
+            decay = self.w[20]
+        factor = 0.9 ** (1 / decay) - 1
+        return s * (r ** (1 / decay) - 1) / factor
+
 
 def calculate_workload_reduction(R: torch.Tensor, S: float, D: float, fsrs: FSRS6_Standalone) -> torch.Tensor:
-    """Calculate workload reduction: (1/S) - (1/S_new)"""
+    """Calculate workload reduction using actual review intervals at retention R"""
     S_tensor = torch.tensor(S, dtype=torch.float32)
 
     S_success = fsrs.calculate_success_stability(S_tensor, D, R)
     S_failure = fsrs.calculate_failure_stability(S_tensor, D, R)
 
-    rel_increase_success = S_success / S
-    rel_decrease_failure = S_failure / S
+    # Expected stability after review (weighted by success/failure probability)
+    S_new = R * S_success + (1 - R) * S_failure
 
-    expected_increase_mean = R * rel_increase_success + (1 - R) * rel_decrease_failure
+    # Workload = 1 / interval, where interval is when retention drops to R
+    interval_init = fsrs.interval_from_retention(R, S)
+    interval_after = fsrs.interval_from_retention(R, S_new)
 
-    workload_init = 1 / S
-    workload_after = 1 / (S * expected_increase_mean)
+    workload_init = 1 / interval_init
+    workload_after = 1 / interval_after
     return workload_init - workload_after
 
 
