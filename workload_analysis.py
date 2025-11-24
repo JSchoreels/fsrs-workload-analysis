@@ -86,15 +86,12 @@ def calculate_workload_reduction(R: torch.Tensor, S: float, D: float, fsrs: FSRS
     S_success = fsrs.calculate_success_stability(S_tensor, D, R)
     S_failure = fsrs.calculate_failure_stability(S_tensor, D, R)
 
-    # Expected stability after review (weighted by success/failure probability)
-    S_new = R * S_success + (1 - R) * S_failure
-
-    # Workload = 1 / interval, where interval is when retention drops to R
     interval_init = fsrs.interval_from_retention(R, S)
-    interval_after = fsrs.interval_from_retention(R, S_new)
+    interval_after_success = fsrs.interval_from_retention(R, S_success)
+    interval_after_failure = fsrs.interval_from_retention(R, S_failure)
 
     workload_init = 1 / interval_init
-    workload_after = 1 / interval_after
+    workload_after = R * (1 / interval_after_success)  + (1 - R) * (1 / interval_after_failure)
     return workload_init - workload_after
 
 

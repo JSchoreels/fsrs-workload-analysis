@@ -7,7 +7,8 @@ Analysis tools for understanding workload reduction in the FSRS (Free Spaced Rep
 ### `workload_analysis.py`
 Main analysis script that visualizes workload reduction based on FSRS-6 parameters:
 - **Workload reduction** = `workload_init - workload_after`
-- Where `workload_init = 1/S` (reviews per day before) and `workload_after = 1/(S×expected_increase)` (reviews per day after)
+- Where workload is calculated as `1 / interval_from_retention(R, S)`
+- This uses the actual review interval when retention drops to desired level R, rather than raw stability S
 
 Two visualization modes:
 1. **By Difficulty**: Varies Difficulty (D) and Retention (R) for fixed Stability (S)
