@@ -87,12 +87,12 @@ def calculate_workload_reduction(R: torch.Tensor, S: float, D: float, fsrs: FSRS
     S_failure = fsrs.calculate_failure_stability(S_tensor, D, R)
 
     interval_init = fsrs.interval_from_retention(R, S)
-    interval_after_success = fsrs.interval_from_retention(R, S_success)
-    interval_after_failure = fsrs.interval_from_retention(R, S_failure)
+    interval_after_success = torch.max(torch.ones(1), fsrs.interval_from_retention(R, S_success))
+    interval_after_failure = torch.max(torch.ones(1), fsrs.interval_from_retention(R, S_failure))
 
     workload_init = 1 / interval_init
     workload_after = R * (1 / interval_after_success)  + (1 - R) * (1 / interval_after_failure)
-    return workload_init - workload_after
+    return (workload_init - workload_after) * torch.min(torch.ones(1), workload_after)
 
 
 def analyze_by_difficulty(S: float, fsrs: FSRS6_Standalone, save_path: str = None):
@@ -186,7 +186,7 @@ def generate_sample_images():
 
     # Generate images varying stability at different difficulty values for multiple S ranges
     for d in [3, 7, 10]:
-        for s_min, s_max in [(1, 50), (50, 100)]:
+        for s_min, s_max in [(10, 50), (50, 100)]:
             analyze_by_stability(D=d, fsrs=fsrs, save_path=f'images/stability_D{d}_{s_min}-{s_max}.png', S_min=s_min, S_max=s_max)
 
 

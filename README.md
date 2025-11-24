@@ -30,12 +30,12 @@ Two visualization modes:
   </tr>
 </table>
 
-### Varying Stability at Different Difficulty Levels (1-50 days)
+### Varying Stability at Different Difficulty Levels (10-50 days)
 <table>
   <tr>
-    <td><img src="images/stability_D3_1-50.png" width="300"/><br/><center>Easy cards (D=3)</center></td>
-    <td><img src="images/stability_D7_1-50.png" width="300"/><br/><center>Medium cards (D=7)</center></td>
-    <td><img src="images/stability_D10_1-50.png" width="300"/><br/><center>Hard cards (D=10)</center></td>
+    <td><img src="images/stability_D3_10-50.png" width="300"/><br/><center>Easy cards (D=3)</center></td>
+    <td><img src="images/stability_D7_10-50.png" width="300"/><br/><center>Medium cards (D=7)</center></td>
+    <td><img src="images/stability_D10_10-50.png" width="300"/><br/><center>Hard cards (D=10)</center></td>
   </tr>
 </table>
 
